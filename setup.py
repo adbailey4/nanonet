@@ -29,6 +29,7 @@ if mo:
     version = mo.group(1)
 else:
     raise RuntimeError('Unable to find version string in "{}/__init__.py".'.format(pkg_name))
+pkg_path = os.path.relpath(pkg_path)
 
 system = platform.system()
 print("System is {}".format(system))
