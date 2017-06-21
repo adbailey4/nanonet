@@ -798,13 +798,13 @@ class Fast5(h5py.File):
             except:
                 raise ValueError('Could not retrieve basecall_mapping genome field from {}'.format(attr_path))
             try:
-                attrs['reference'] = (self.get_reference_fasta(section = section)).split('\n')[1]
+                attrs['reference'] = (self.get_reference_fasta(section = section)).decode().split('\n')[1]
             except:
                 raise ValueError('Could not retrieve basecall_mapping fasta from Alignment analysis')
         
             # Add attributes with keys consistent with Squiggle_map
             rc = '_rc'
-            is_rc = genome.endswith(rc)
+            is_rc = genome.decode().endswith(rc)
             attrs['ref_name'] = genome[:-len(rc)] if is_rc else genome
             attrs['direction'] =  '-' if is_rc else '+'
 

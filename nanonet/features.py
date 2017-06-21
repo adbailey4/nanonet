@@ -155,7 +155,7 @@ def get_labels_ont_mapping(filename, kmer_len=3, section='template'):
             k2 = k1 + kmer_len
             y = np.fromiter(
                 (k[k1:k2] for k in events['kmer']),
-                dtype='>S{}'.format(kmer_len),
+                dtype='>U{}'.format(kmer_len),
                 count = len(events)
             )
         y[~events['good_emission']] = bad_kmer
