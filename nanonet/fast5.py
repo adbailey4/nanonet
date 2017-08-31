@@ -65,6 +65,9 @@ class Fast5(h5py.File):
     __default_basecall_mapping_summary__ = '/Summary/current_space_map_{}/' # under AlignToRef analysis
     __default_basecall_alignment_summary__ = '/Summary/genome_mapping_{}/' # under Alignment analysis
 
+    __default_corrected_genome__ = '/Analyses/RawGenomeCorrected_000/BaseCalled_template' # nanoraw
+
+
     __default_engine_state_path__ = '/EngineStates/'
     __temp_fields__ = ('heatsink', 'asic')
 
@@ -243,7 +246,7 @@ class Fast5(h5py.File):
     ###
     # Extracting read event data
 
-    def get_reads(self, group=False, raw=False, read_numbers=None):
+    def get_reads(self, group=False, raw=False, read_numbers=None, scale=True):
         """Iterator across event data for all reads in file
 
         :param group: return hdf group rather than event data
@@ -275,7 +278,7 @@ class Fast5(h5py.File):
                 if not raw:
                     yield self._get_read_data(reads[read])
                 else:
-                    yield self._get_read_data_raw(reads[read])
+                    yield self._get_read_data_raw(reads[read], scale=scale)
 
 
     def get_read(self, group=False, raw=False, read_number=None):
@@ -288,6 +291,9 @@ class Fast5(h5py.File):
         else:
             return self.get_reads(group, raw, read_numbers=[read_number]).next() 
 
+    def get_corrected_events(self):
+        reads = self[self.__default_corrected_genome__]
+        return reads['Events']
 
     def _get_read_data(self, read, indices=None):
         """Private accessor to read event data"""
@@ -975,3 +981,4 @@ def iterate_fast5(path, strand_list=None, paths=False, mode='r', limit=None, fil
             fh.close()
         else:
             yield os.path.abspath(f)
+
