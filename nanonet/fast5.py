@@ -292,8 +292,12 @@ class Fast5(h5py.File):
             return self.get_reads(group, raw, read_numbers=[read_number]).next() 
 
     def get_corrected_events(self):
-        reads = self[self.__default_corrected_genome__]
-        return reads['Events']
+        try:
+            reads = self[self.__default_corrected_genome__]
+            events = reads['Events']
+        except KeyError:
+            raise KeyError('Read does not contain required fields: {}'.format(self.__default_corrected_genome__))
+        return events
 
     def _get_read_data(self, read, indices=None):
         """Private accessor to read event data"""
