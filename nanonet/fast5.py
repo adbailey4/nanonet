@@ -292,12 +292,15 @@ class Fast5(h5py.File):
             return self.get_reads(group, raw, read_numbers=[read_number]).next() 
 
     def get_corrected_events(self):
+        """Returns corrected events table along with the start relative to raw data"""
         try:
             reads = self[self.__default_corrected_genome__]
             events = reads['Events']
+            attributes = dict(events.attrs.items())
+            corr_start_rel_to_raw = attributes['read_start_rel_to_raw']
         except KeyError:
             raise KeyError('Read does not contain required fields: {}'.format(self.__default_corrected_genome__))
-        return events
+        return events, corr_start_rel_to_raw
 
     def _get_read_data(self, read, indices=None):
         """Private accessor to read event data"""
