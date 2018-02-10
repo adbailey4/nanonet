@@ -192,6 +192,10 @@ def _construct_events(sums, sumsqs, edges, sample_rate):
         s = e
         sm = sums[e-1]
         smsq = sumsqs[e-1]
+    # print("events['start'][i]", events['start'][i])
+    # print("e", e)
+    # print("ev_mean", ev_mean)
+    # print("events['start'][i]", events['start'][i])
 
     if sample_rate is not None:
         events['start'] /= sample_rate
@@ -292,7 +296,7 @@ def deltamean_event_detect(raw_data, sample_rate, window_lengths=[16, 40], thres
     return events
 
 
-def minknow_event_detect(raw_data, sample_rate, window_lengths=[16, 40], thresholds=[8.0, 4.0], peak_height = 1.0):
+def minknow_event_detect(raw_data, sample_rate, window_lengths=[16, 40], thresholds=[8.0, 4.0], peak_height = 1.0, get_peaks=False):
     """Basic, standard even detection using two t-tests
 
     :param raw_data: ADC values
@@ -312,7 +316,8 @@ def minknow_event_detect(raw_data, sample_rate, window_lengths=[16, 40], thresho
 
     peaks = short_long_peak_detector(tstats, thresholds, window_lengths, peak_height)
     events = _construct_events(sums, sumsqs, peaks, sample_rate)
-
-    return events
-
+    if get_peaks:
+        return peaks
+    else:
+        return events
 

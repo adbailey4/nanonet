@@ -28,8 +28,20 @@ static PyMethodDef FilterMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-PyMODINIT_FUNC initnanonetfilters(void) {
-    (void) Py_InitModule("nanonetfilters", FilterMethods);
+//PyMODINIT_FUNC initnanonetfilters(void) {
+//    (void) Py_InitModule("nanonetfilters", FilterMethods);
+//}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "nanonetfilters",
+        NULL,
+        NULL,
+        FilterMethods,
+};
+
+PyMODINIT_FUNC PyInit_nanonetfilters(void) {
+  return PyModule_Create(&moduledef);
 }
 
 

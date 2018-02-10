@@ -12,3 +12,5 @@ dist
 deb_dist
 tmp/
 *.gz
+nanonet/*.bak
+setup.py.bak

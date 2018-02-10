@@ -2,7 +2,7 @@ from uuid import uuid4
 from time import sleep
 import os
 from multiprocessing import Process
-import Queue
+import queue
 from functools import partial
 
 from myriad.components import MyriadServer
@@ -96,7 +96,7 @@ def _singleton_worker(function, job_q, job_q_closed, result_q, timeout=__timeout
             job = job_q.get_nowait()
             result = function(job)
             result_q.put(result)
-        except Queue.Empty:
+        except queue.Empty:
             if job_q_closed._getvalue().value:
                 break
         sleep(timeout)
@@ -109,7 +109,7 @@ def _multi_worker(function, take_n, job_q, job_q_closed, result_q, timeout=__tim
             for _ in xrange(take_n):
                 job = job_q.get_nowait()
                 jobs.append(job)
-        except Queue.Empty:
+        except queue.Empty:
             if job_q_closed._getvalue().value:
                 break
         else:

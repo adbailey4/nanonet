@@ -62,7 +62,7 @@ class SetChemistryDefaults(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values)
         params = __DEFAULTS__[values]
-        for key, value in params.items():
+        for key, value in list(params.items()):
             setattr(namespace, key, value)
 
 
@@ -94,7 +94,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     parser.add_argument("--section", default=None, choices=('template', 'complement'),
         help="Section of read for which to produce basecalls, will override that stored in model file.")
 
-    parser.add_argument("--chemistry", choices=__DEFAULTS__.keys(), default=None, action=SetChemistryDefaults,
+    parser.add_argument("--chemistry", choices=list(__DEFAULTS__.keys()), default=None, action=SetChemistryDefaults,
         help="Shorthand for selection various analysis parameters.")
     parser.add_argument("--model", type=str, action=FileExist,
         default=pkg_resources.resource_filename('nanonet', 'data/default_template.npy'),
@@ -149,23 +149,23 @@ class ProcessAttr(object):
 def list_opencl_platforms():
     if cl is None:
         raise ImportError('pyopencl is not installed, install with pip.')
-    print '\n' + '=' * 60 + '\nOpenCL Platforms and Devices'
+    print('\n' + '=' * 60 + '\nOpenCL Platforms and Devices')
     platforms = (p for p in cl.get_platforms() if p.get_devices(device_type=cl.device_type.GPU))
     for platform in platforms:
-        print '=' * 60
-        print 'Name:     {}'.format(platform.name)
-        print 'Vendor:   {}'.format(platform.vendor)
-        print 'Version:  {}'.format(platform.version)
+        print('=' * 60)
+        print('Name:     {}'.format(platform.name))
+        print('Vendor:   {}'.format(platform.vendor))
+        print('Version:  {}'.format(platform.version))
         for device in platform.get_devices(device_type=cl.device_type.GPU):
-            print '    ' + '-' * 56
-            print '    Name:  {}'.format(device.name)
-            print '    Type:  {}'.format(cl.device_type.to_string(device.type))
-            print '    Max Clock Speed:  {} Mhz'.format(device.max_clock_frequency)
-            print '    Compute Units:  {}'.format(device.max_compute_units)
-            print '    Local Memory:  {:.0f} KB'.format(device.local_mem_size/1024)
-            print '    Constant Memory:  {:.0f} KB'.format(device.max_constant_buffer_size/1024)
-            print '    Global Memory: {:.0f} GB'.format(device.global_mem_size/1073741824.0)
-    print
+            print('    ' + '-' * 56)
+            print('    Name:  {}'.format(device.name))
+            print('    Type:  {}'.format(cl.device_type.to_string(device.type)))
+            print('    Max Clock Speed:  {} Mhz'.format(device.max_clock_frequency))
+            print('    Compute Units:  {}'.format(device.max_compute_units))
+            print('    Local Memory:  {:.0f} KB'.format(device.local_mem_size/1024))
+            print('    Constant Memory:  {:.0f} KB'.format(device.max_constant_buffer_size/1024))
+            print('    Global Memory: {:.0f} GB'.format(device.global_mem_size/1073741824.0))
+    print()
 
 def get_n_bases(kmers):
     bases = []
@@ -192,11 +192,11 @@ def process_read(modelfile, fast5, min_prob=1e-5, trans=None, for_2d=False, writ
     try:
         it = make_basecall_input_multi((fast5,), **kwargs)
         if write_events:
-            fname, features, events = it.next()
+            fname, features, events = next(it)
         else:
-            fname, features, _ = it.next()
+            fname, features, _ = next(it)
     except Exception as e:
-        print str(e)
+        print(str(e))
         return None
 
     # Run network
@@ -261,7 +261,7 @@ def get_qdata(post, kmers):
     n_bases = len(bases)
 
     qdata = np.empty((n_events, len(bases)*kmer_len), dtype=post.dtype)
-    for i, (pos, base) in enumerate(itertools.product(range(kmer_len), bases)):
+    for i, (pos, base) in enumerate(itertools.product(list(range(kmer_len)), bases)):
         cols = np.fromiter((k[pos] == base for k in kmers),
             dtype=bool, count=len(kmers))
         qdata[:, i] = np.sum(post[:, cols], axis=1)
@@ -279,16 +279,16 @@ def form_basecall(qdata, kmers, states, qscore_correction=None):
     seq_len = np.sum(moves) + kmer_len
     scores = np.zeros((seq_len, len(bases)), dtype=np.float32)
     sequence = list(kmer_path[0])
-    posmap = range(kmer_len)
+    posmap = list(range(kmer_len))
 
     _contribute(scores, qdata[0, :], posmap, n_bases)
     for event, move in enumerate(moves):
         if move > 0:
             if move == kmer_len:
-                posmap = range(posmap[-1] + 1, posmap[-1] + 1 + kmer_len)
+                posmap = list(range(posmap[-1] + 1, posmap[-1] + 1 + kmer_len))
             else:
                 posmap[:-move] = posmap[move:]
-                posmap[-move:] = range(posmap[-move-1] + 1, posmap[-move-1] + 1 + move)
+                posmap[-move:] = list(range(posmap[-move-1] + 1, posmap[-move-1] + 1 + move))
             sequence.append(kmer_path[event][-move:])
         _contribute(scores, qdata[event, :], posmap, n_bases)
     sequence = ''.join(sequence)
@@ -341,7 +341,7 @@ def write_to_file(fast5, events, section, seq, qual, good_events, kmer_path, kme
     adder.add('model_state', kmer_path,
         dtype='>S{}'.format(len(kmers[0])))
     adder.add('p_model_state', np.fromiter(
-        (post[i,j] for i,j in itertools.izip(xrange(len(post)), states)),
+        (post[i,j] for i,j in zip(range(len(post)), states)),
         dtype=float, count=len(post)))
     adder.add('mp_model_state', np.fromiter(
         (kmers[i] for i in np.argmax(post, axis=1)),
@@ -389,9 +389,9 @@ def process_read_opencl(modelfile, pa, fast5_list, min_prob=1e-5, trans=None, wr
 
     # Get features
     try:
-        file_list, features_list, events_list = zip(*(
+        file_list, features_list, events_list = list(zip(*(
             make_basecall_input_multi(fast5_list, **kwargs)
-        ))
+        )))
     except:
         return [None] * len(fast5_list)
     features_list = [x.astype(nn.dtype) for x in features_list] 
@@ -418,18 +418,18 @@ def process_read_opencl(modelfile, pa, fast5_list, min_prob=1e-5, trans=None, wr
     network_time_list = [(now() - t0) / n_files] * n_files
 
     # Manipulate posterior
-    post_list, good_events_list = zip(*(
+    post_list, good_events_list = list(zip(*(
         clean_post(post, network.meta['kmers'], min_prob) for post in post_list
-    ))
+    )))
 
     # Decode kmers
     t0 = now()
     if fast_decode:
         # actually this is slower, but we want to run the same algorithm
         #   in the case of heterogeneous computer resource.
-        score_list, states_list = zip(*(
+        score_list, states_list = list(zip(*(
             decoding.decode_homogenous(post, log=False) for post in post_list
-        ))
+        )))
     else:
         trans_list = [np.log(__ETA__ +
             decoding.fast_estimate_transitions(post, trans=trans))
@@ -453,8 +453,8 @@ def process_read_opencl(modelfile, pa, fast5_list, min_prob=1e-5, trans=None, wr
 
     # Write events table
     if write_events:
-        section_list = (kwargs['section'] for _ in xrange(n_files))
-        kmers_list = (network.meta['kmers'] for _ in xrange(n_files))
+        section_list = (kwargs['section'] for _ in range(n_files))
+        kmers_list = (network.meta['kmers'] for _ in range(n_files))
         for data in zip(
             file_list, events_list, section_list, seq_list, qual_list,
             good_events_list, kmer_path_list, kmers_list, post_list, states_list
@@ -462,9 +462,9 @@ def process_read_opencl(modelfile, pa, fast5_list, min_prob=1e-5, trans=None, wr
             write_to_file(*data)
 
     # Construst a sequences of objects as process_read returns
-    data = zip(file_list, zip(seq_list, qual_list), score_list, (len(x) for x in features_list))
-    timings = zip(network_time_list, decode_time_list)
-    ret = zip(data, timings)
+    data = list(zip(file_list, list(zip(seq_list, qual_list)), score_list, (len(x) for x in features_list)))
+    timings = list(zip(network_time_list, decode_time_list))
+    ret = list(zip(data, timings))
     if n_files < len(fast5_list):
         # pad as if failed in process_read
         ret.extend([None]*(len(fast5_list) - n_files))
@@ -534,7 +534,7 @@ def main():
         #    need to wrap files in lists, and unwrap results
         worker, n_files = workers[0]
         fast5_files = group_by_list(fast5_files, [n_files])
-        mapper = itertools.chain.from_iterable(itertools.imap(worker, fast5_files))
+        mapper = itertools.chain.from_iterable(map(worker, fast5_files))
     else:
         # Heterogeneous compute
         mapper = JobQueue(fast5_files, workers)

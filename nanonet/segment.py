@@ -37,6 +37,7 @@ def segment(events, section='template', config=__config__):
     med, mad = med_mad(events['mean'][-100:])
     max_thresh = med + 1.48 * 2 + mad
     first_event = locate_stall(events, max_thresh)
+    print("First Event {}".format(first_event))
     events = events[first_event:]
 
     data1, data2, results = split_hairpin_abasic(events, config)
@@ -376,7 +377,7 @@ def _find_abasic_candidates(events, mean_threshold, min_peak_dur, leader_peak_he
     candidates = collections.deque()
     if max_events_to_search is None:
         max_events_to_search = means.size
-    for i in xrange(means.size):
+    for i in range(means.size):
         if in_peak:
             if means[i] > mean_threshold:
                 count += 1

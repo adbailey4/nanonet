@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from itertools import izip
+
 import numpy as np 
 import numpy.lib.recfunctions as nprf
 
@@ -89,9 +89,14 @@ def make_basecall_input_multi(fast5_files, section='template', window=[-1, 0, 1]
                 events = minknow_event_detect(
                     fh.get_read(raw=True), fh.sample_rate, **ed_params
                 )
+                print("minknow_event_detect")
+                print(events)
+
             else:
                 events = fh.get_read()
-            events, _ = segment(events, section=section) 
+            events, _ = segment(events, section=section)
+            print("segment")
+            print(events)
         try:
             X = events_to_features(events, window=window, sloika_model=sloika_model)
         except TypeError:
@@ -113,7 +118,7 @@ def chunker(array, chunk_size):
     :param array: list-like input
     :param chunk_size: output chunk size
     """
-    for i in xrange(0, len(array), chunk_size):
+    for i in range(0, len(array), chunk_size):
         yield array[i:i+chunk_size]
 
 
@@ -212,7 +217,7 @@ def make_currennt_training_input_multi(fast5_files, netcdf_file, window=[-1, 0, 
                 X = events_to_features(get_events(f, **callback_kwargs), window=window)
                 labels = get_labels(f, **callback_kwargs)
             except:
-                print "Skipping: {}".format(f)
+                print("Skipping: {}".format(f))
                 continue
 
             try:   
@@ -221,7 +226,7 @@ def make_currennt_training_input_multi(fast5_files, netcdf_file, window=[-1, 0, 
                 if len(X) != len(labels):
                     raise RuntimeError('Length of features and labels not equal.')
             except:
-                print "Skipping: {}".format(f)
+                print("Skipping: {}".format(f))
 
             try:
                 # convert kmers to ints
@@ -236,8 +241,8 @@ def make_currennt_training_input_multi(fast5_files, netcdf_file, window=[-1, 0, 
                     'Check labels are no longer than {} and contain only {}'.format(f, kmer_len, alphabet)
                 )
             else:
-                print "Adding: {}".format(f)
-                for chunk, (X_chunk, y_chunk) in enumerate(izip(chunker(X, chunk_size), chunker(y, chunk_size))):
+                print("Adding: {}".format(f))
+                for chunk, (X_chunk, y_chunk) in enumerate(zip(chunker(X, chunk_size), chunker(y, chunk_size))):
                     if len(X_chunk) < min_chunk:
                         break
                     chunks_written += 1 #should be the same as curr_numSeqs below

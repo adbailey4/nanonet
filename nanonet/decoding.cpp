@@ -19,9 +19,22 @@ static PyMethodDef DecodeMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-PyMODINIT_FUNC initnanonetdecode(void) {
-    (void) Py_InitModule("nanonetdecode", DecodeMethods);
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "nanonetdecode",
+        NULL,
+        NULL,
+        DecodeMethods,
+};
+
+PyMODINIT_FUNC PyInit_nanonetdecode(void) {
+  return PyModule_Create(&moduledef);
 }
+
+
+//PyMODINIT_FUNC initnanonetdecode(void) {
+//    (void) Py_InitModule("nanonetdecode", DecodeMethods);
+//}
 
 
 extern "C" void viterbi_update(

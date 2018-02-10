@@ -39,9 +39,7 @@ def relu(x):
     return np.where(x > 0.0, x, 0.0)
 
 
-class Layer(object):
-    __metaclass__ = abc.ABCMeta
-
+class Layer(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def run(self, inMat):
         """Run network layer"""
@@ -133,22 +131,22 @@ class FeedForward(Layer):
         # Allocate OpenCL buffers    
         cl_inMatList = []
         buffer_flags = cl.mem_flags.READ_ONLY | cl.mem_flags.USE_HOST_PTR
-        for x in xrange(iter):
+        for x in range(iter):
             cl_inMatList.append(cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(inMat[x])))
         cl_W = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(Wtr))
         cl_b = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(self.b))
         cl_outList = []
-        for x in xrange(iter):
+        for x in range(iter):
             cl_outList.append(cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, inMat[x].shape[0]*self.W.shape[1]*inMat[x].itemsize))
 
         # Run the kernel
-        for x in xrange(iter):
+        for x in range(iter):
             prg.run_layer(queueList[x], (global_x_list[x], global_y), (local_x, local_y), np.int32(inMat[x].shape[0]), np.int32(Wtr.shape[0]), cl_inMatList[x], cl_W, cl_b, cl_outList[x])
             queueList[x].flush()
         
         # Copy results back to host (blocking call)
         outList = []
-        for x in xrange(iter):
+        for x in range(iter):
             outList.append(np.zeros((inMat[x].shape[0],self.W.shape[1]), dtype=dtype))
             cl.enqueue_copy(queueList[x], outList[x], cl_outList[x])
         return outList
@@ -224,25 +222,25 @@ class SoftMax(Layer):
         # Allocate OpenCL buffers    
         cl_inMatList = []
         buffer_flags = cl.mem_flags.READ_ONLY | cl.mem_flags.USE_HOST_PTR
-        for x in xrange(iter):
+        for x in range(iter):
             cl_inMatList.append(cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(inMat[x])))
         cl_W = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(Wtr))
         cl_b = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(self.b))
         cl_outList = []
-        for x in xrange(iter):
+        for x in range(iter):
             cl_outList.append(cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, inMat[x].shape[0]*self.W.shape[1]*inMat[x].itemsize))
 
         # Run the kernel
-        for x in xrange(iter):
+        for x in range(iter):
             prg.run_layer(queueList[x], (global_x_list[x], global_y), (local_x, local_y), np.int32(inMat[x].shape[0]), np.int32(Wtr.shape[0]), cl_inMatList[x], cl_W, cl_b, cl_outList[x])
             queueList[x].flush()
-        for x in xrange(iter):
+        for x in range(iter):
             prg.run_softmax(queueList[x], (inMat[x].shape[0]*local_x_softmax, 1), (local_x_softmax, 1), np.int32(Wtr.shape[0]), cl_outList[x])
             queueList[x].flush()
         
         # Copy results back to host (blocking call)
         outList = []
-        for x in xrange(iter):
+        for x in range(iter):
             outList.append(np.zeros((inMat[x].shape[0],self.W.shape[1]), dtype=dtype))
             cl.enqueue_copy(queueList[x], outList[x], cl_outList[x])
         return outList
@@ -383,7 +381,7 @@ class LSTM(RNN):
         iter = len(inMat)
         
         outList = []
-        for x in xrange(iter):
+        for x in range(iter):
             outList.append(np.zeros((inMat[x].shape[0], self.out_size), dtype=dtype))
             
         kernel_src = kernel_code_lstm
@@ -397,7 +395,7 @@ class LSTM(RNN):
         # Allocate OpenCL buffers
         cl_inMatList = []
         buffer_flags = cl.mem_flags.READ_ONLY | cl.mem_flags.USE_HOST_PTR
-        for x in xrange(iter):
+        for x in range(iter):
             cl_inMatList.append(cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(inMat[x])))
         cl_iW = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(self.iW))
         cl_lW = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(self.lW))
@@ -405,20 +403,20 @@ class LSTM(RNN):
         cl_p  = cl.Buffer(ctx, buffer_flags, hostbuf=np.ravel(self.p))
         cl_outList = []
         cl_outvW = []
-        for x in xrange(iter):
+        for x in range(iter):
             cl_outList.append(cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, outList[x].shape[0]*self.out_size*inMat[x].itemsize))
             cl_outvW.append(cl.Buffer(ctx, cl.mem_flags.READ_WRITE, outList[x].shape[0]*self.iW.shape[1]*inMat[x].itemsize))
 
         # Run the kernel
-        for x in xrange(iter):
+        for x in range(iter):
             prg.run_dot(queueList[x], (inMat[x].shape[0]*self.iW.shape[1], 1), (self.iW.shape[1], 1), np.int32(self.iW.shape[0]), np.int32(self.iW.shape[1]), cl_inMatList[x], cl_iW, cl_outvW[x])
             queueList[x].flush()
-        for x in xrange(iter):
+        for x in range(iter):
             prg.run_lstm_layer(queueList[x], (self.iW.shape[1], 1), (self.iW.shape[1], 1), np.int32(inMat[x].shape[0]), cl_outvW[x], cl_lW, cl_b, cl_p, cl_outList[x])
             queueList[x].flush()
         
         # Copy results back to host (blocking call)
-        for x in xrange(iter):
+        for x in range(iter):
             outRavel = np.ravel(outList[x])
             cl.enqueue_copy(queueList[x], outRavel, cl_outList[x])
             outList[x] = np.copy(np.reshape(outRavel, (outList[x].shape[0], outList[x].shape[1])))
@@ -475,12 +473,12 @@ class Parallel(Layer):
     def run(self, inMat, ctx=None, queueList=None):
         if not queueList:
             assert self.in_size == inMat.shape[1]
-            return np.hstack(map(lambda x: x.run(inMat), self.layers))
+            return np.hstack([x.run(inMat) for x in self.layers])
         else:
             for mat in inMat:
                 assert self.in_size == mat.shape[1]
-            tmp = map(lambda x: x.run(inMat, ctx, queueList), self.layers)
-            tmp2 = map(list, zip(*tmp))
+            tmp = [x.run(inMat, ctx, queueList) for x in self.layers]
+            tmp2 = list(map(list, list(zip(*tmp))))
             tmp3 = []
             for t in tmp2:
                 tmp3.append(np.hstack(t))
@@ -540,7 +538,7 @@ def build_program(ctx, src, extra=None, debug=False):
 
     if debug:
         for i, line in enumerate(src.splitlines()):
-            print '{:03d}{}'.format(i, line)
+            print('{:03d}{}'.format(i, line))
  
     build_line = '-I. -DFPTYPE={} -DFSUF={}'.format(fptype, fptype_suffix)
     if extra is not None:

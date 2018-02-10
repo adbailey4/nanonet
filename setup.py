@@ -8,7 +8,7 @@ from glob import glob
 from setuptools import setup, find_packages, Extension, Command
 import pkg_resources
 
-print """
+print("""
 *******************************************************************
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,7 +16,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 (c) 2016 Oxford Nanopore Technologies Ltd.
 *******************************************************************
-"""
+""")
 
 # Get the version number from __init__.py
 pkg_name = 'nanonet'
@@ -31,10 +31,10 @@ else:
     raise RuntimeError('Unable to find version string in "{}/__init__.py".'.format(pkg_name))
 
 system = platform.system()
-print "System is {}".format(system)
-print "By default the 2D basecaller (standard and OpenCL) are not built."
-print "To enable these use 'with2d' and 'opencl2d' command line options."
-print
+print(("System is {}".format(system)))
+print("By default the 2D basecaller (standard and OpenCL) are not built.")
+print("To enable these use 'with2d' and 'opencl2d' command line options.")
+print()
 
 with_2d = True if 'with2d' in sys.argv else False
 if with_2d:
@@ -47,7 +47,7 @@ if opencl_2d:
 
 mingw = True if "mingw" in sys.argv else False
 if mingw:
-    sys.argv.remove('mingw')
+    sys.argv.remove('milsngw')
     # patch distutils to force our compiler class. With distutils build
     #   command we can use the commandline option to set compiler but
     #   develop command does accept this. C++ extensions also aren't
@@ -74,7 +74,7 @@ cpp_compile_args = []
 optimisation = ['-DNDEBUG']
 
 if system == 'Darwin':
-    print "Adding OSX compile/link options"
+    print("Adding OSX compile/link options")
     optimisation.extend(['-O3', '-fstrict-aliasing'])
     cpp_compile_args.extend(['-std=c++0x','-Wno-unused-local-typedefs'])
     # may wish to edit - required for 2D
@@ -83,7 +83,7 @@ if system == 'Darwin':
 elif system == 'Windows':
     event_detect_include.append(os.path.join(pkg_path, 'eventdetection'))
     if not mingw:
-        print "Adding windows (MSVC) compile/link options"
+        print("Adding windows (MSVC) compile/link options")
         optimisation = ['/O2', '/Gs-']
         c_compile_args = ['/wd4820']
         cpp_compile_args.extend(['/EHsc', '/wd4996'])
@@ -93,7 +93,7 @@ elif system == 'Windows':
         if opencl_2d:
             raise NotImplementedError('OpenCL 2D caller not currently supported on Windows with MSVC.')
     else:
-        print "Adding windows (mingw64) compile/link options"
+        print("Adding windows (mingw64) compile/link options")
         optimisation.extend(['-O3', '-fstrict-aliasing'])
         c_compile_args.extend(['-DMS_WIN64', '-D_hypot=hypot'])
         cpp_compile_args.extend(['-DMS_WIN64', '-D_hypot=hypot', '-Wno-unused-local-typedefs'])
@@ -115,7 +115,7 @@ elif system == 'Windows':
     boost_lib_path = [os.path.join(boost_location, boost_lib_name)]
     boost_inc = [boost_location]
 else:
-    print "Adding Linux(?) compile/link options"
+    print("Adding Linux(?) compile/link options")
     optimisation.extend(['-O3', '-fstrict-aliasing'])
     cpp_compile_args.extend(['-std=c++0x', '-Wno-unused-local-typedefs'])
     boost_libs.append('boost_python')
@@ -186,7 +186,7 @@ if with_2d:
     ))
 
 if opencl_2d:
-    print "Setting up OpenCL 2D basecall extension, this may need some tinkering"
+    print("Setting up OpenCL 2D basecall extension, this may need some tinkering")
     extensions.append(Extension(
         'nanonet.caller_2d.viterbi_2d_ocl.viterbi_2d_ocl',
         include_dirs=[os.path.join(caller_2d_path, x) for x in
@@ -233,7 +233,7 @@ if system == 'Windows' and "bdist_wheel" in sys.argv:
     mingwlibs = glob(os.path.join(mingwdir,'*.dll'))
     mingwlibs = [os.path.join(mingwdir, x) for x in mingwlibs]
     dlls = [os.path.relpath(x) for x in blibs + mingwlibs]
-    print dlls
+    print(dlls)
     bdist_args = {
         'scripts':dlls,
         'distclass':BinaryDistribution
